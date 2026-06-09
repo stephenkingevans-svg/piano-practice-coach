@@ -17,8 +17,13 @@ export default function PracticeOverview() {
     const { data, error } = await supabase
       .from("scale_items")
       .select("*")
-      .order("practice_priority", { ascending: false })
-      .order("last_practiced", { ascending: true, nullsFirst: true })
+      .order("successful_sessions_at_current_tempo", {
+        ascending: true,
+      })
+      .order("last_practiced", {
+        ascending: true,
+        nullsFirst: true,
+      })
       .limit(3);
 
     if (error) {
@@ -36,7 +41,7 @@ export default function PracticeOverview() {
       <section className="mx-auto max-w-2xl space-y-6">
         <header>
           <h1 className="text-4xl font-bold">
-            Today&apos;s Practice
+            Today's Practice
           </h1>
 
           <p className="text-zinc-600">
@@ -80,7 +85,8 @@ export default function PracticeOverview() {
                 </div>
 
                 <div className="text-sm text-zinc-600">
-                  Status: {scale.status}
+                  Successful Sessions At Current Tempo:{" "}
+                  {scale.successful_sessions_at_current_tempo}
                 </div>
 
                 <div className="text-sm text-zinc-600">
