@@ -5,32 +5,42 @@ import { createClient } from "@/lib/supabase/client";
 
 export default function PracticeOverview() {
   const [scales, setScales] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    async function loadScales() {
-      const supabase = createClient();
+    loadDailyScales();
+  }, []);
 
-      const { data } = await supabase
-        .from("scale_items")
-        .select("*")
-        .order("name");
+  async function loadDailyScales() {
+    const supabase = createClient();
 
-      setScales(data || []);
+    const { data, error } = await supabase
+      .from("scale_items")
+      .select("*")
+      .order("practice_priority", { ascending: false })
+      .order("last_practiced", { ascending: true, nullsFirst: true })
+      .limit(3);
+
+    if (error) {
+      console.error(error);
+      setLoading(false);
+      return;
     }
 
-    loadScales();
-  }, []);
+    setScales(data || []);
+    setLoading(false);
+  }
 
   return (
     <main className="min-h-screen bg-zinc-50 p-6">
       <section className="mx-auto max-w-2xl space-y-6">
         <header>
           <h1 className="text-4xl font-bold">
-            Today's Practice
+            Today&apos;s Practice
           </h1>
 
           <p className="text-zinc-600">
-            Review your session before you begin.
+            Your daily session has been generated.
           </p>
         </header>
 
@@ -39,13 +49,25 @@ export default function PracticeOverview() {
             Scales Due Today
           </h2>
 
+          {loading && (
+            <p className="text-zinc-500">
+              Loading scales...
+            </p>
+          )}
+
+          {!loading && scales.length === 0 && (
+            <p className="text-zinc-500">
+              No scales found.
+            </p>
+          )}
+
           <div className="space-y-3">
             {scales.map((scale) => (
               <div
                 key={scale.id}
                 className="rounded-lg bg-zinc-100 p-4"
               >
-                <div className="font-medium">
+                <div className="font-medium text-lg">
                   {scale.name}
                 </div>
 
@@ -59,6 +81,13 @@ export default function PracticeOverview() {
 
                 <div className="text-sm text-zinc-600">
                   Status: {scale.status}
+                </div>
+
+                <div className="text-sm text-zinc-600">
+                  Last Practised:{" "}
+                  {scale.last_practiced
+                    ? new Date(scale.last_practiced).toLocaleDateString()
+                    : "Never"}
                 </div>
               </div>
             ))}
